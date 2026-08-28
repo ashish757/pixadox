@@ -30,7 +30,7 @@ const EncodePage = () => {
 
 
     return (
-    <main className="flex-col min-h-screen items-center bg-gray-100 p-2">
+    <main className="flex-col min-h-screen items-center bg-background p-2">
 
         <div className="w-full flex space-x-2 px-8 py-4">
             <div className={"w-1/2"}>

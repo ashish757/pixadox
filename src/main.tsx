@@ -12,7 +12,8 @@ import UploadPage from "./pages/UploadPage.tsx";
 const router = createBrowserRouter([
   { path: '/', element: <App /> , children: [
           {path: "/", element: <LandingPage /> },
-          {path: "/upload", element: <UploadPage /> },
+          {path: "/upload-encode", element: <UploadPage /> },
+          {path: "/upload-decode", element: <UploadPage /> },
           {path: "/encode", element: <EncodePage /> },
       ]},
 ])
