@@ -1,18 +1,20 @@
 import {useMemo, useState} from "react";
-import {encodeImageWithBinary, imageDataToUrl} from "./util/encodeImage.ts";
-import {stringToBinary} from "./util/stringToBinary.ts";
-import {bitsToMegabytes} from "./util/convertStorageUnit.ts";
+import {encodeImageWithBinary, imageDataToUrl} from "../util/encodeImage.ts";
+import {stringToBinary} from "../util/stringToBinary.ts";
+import {bitsToMegabytes} from "../util/convertStorageUnit.ts";
+import {useLocation} from "react-router-dom";
 
 
-interface EncodePageProps {
-    originalImage: ImageData | null;
-}
 
-const EncodePage = ({originalImage}: EncodePageProps) => {
+const EncodePage = () => {
+    const location = useLocation();
+
+    console.log(location)
+
+    const originalImage = location.state?.originalImage as ImageData | null;
 
     const [modifiedImage, setModifiedImage] = useState<ImageData | null>(null);
     const [message, setMessage] = useState<string>("");
-    // const [messageBinary, setMessageBinary] = useState<string>("");
 
 
     const originalImageUrl = useMemo(() => imageDataToUrl(originalImage), [originalImage]);
@@ -21,7 +23,6 @@ const EncodePage = ({originalImage}: EncodePageProps) => {
     const encodeHandler = () => {
         if(originalImage == null) return;
         const bin = stringToBinary(message);
-        // setMessageBinary(bin)
         const modified = encodeImageWithBinary(originalImage,bin);
         setModifiedImage(modified);
     }
@@ -35,7 +36,9 @@ const EncodePage = ({originalImage}: EncodePageProps) => {
             <div className={"w-1/2"}>
                 <h2 className={"text-center font-bold text-green-700 text-2xl"}>Original Image</h2>
                 <div className={"flex justify-center items-center"}>
-                    <img className={""}  src={originalImageUrl} alt={"testing"} />
+                    {
+                        originalImageUrl ? <img className={""} src={originalImageUrl} alt={"testing"}/> : <p>Error Loading the Image</p>
+                    }
                 </div>
             </div>
             <div className={"w-1/2"}>
@@ -43,8 +46,11 @@ const EncodePage = ({originalImage}: EncodePageProps) => {
                 <div className={"flex justify-center items-center"}>
                 {
 
-                    modifiedImageUrl ? ( <img src={modifiedImageUrl} alt={"not modified yet"} />) : (
-                        <p>Have not Encoded any Message Yet</p>
+                    modifiedImageUrl ? ( <>
+                            <img src={modifiedImageUrl} alt={"not modified yet"} />
+                    </>
+                    ) : (
+                        <p className={"mt-32"}>Have not Encoded any Message Yet</p>
                     )
                 }
                 </div>
@@ -104,8 +110,11 @@ const EncodePage = ({originalImage}: EncodePageProps) => {
                     <textarea className={"w-full border p-4 rounded-md border-gray-300 focus:outline-1 "} rows={10} onChange={(e) => setMessage(e.target.value)}  placeholder={"Your message..."}/>
                 </div>
 
-                <div>
+                <div className={" flex gap-4"}>
                     <button className={"border rounded-md border-gray-300 bg-gray-200 px-8 py-2 cursor-pointer text-gray-700"} onClick={encodeHandler}>Encode</button>
+                    {modifiedImageUrl && <a href={modifiedImageUrl} download={"encoded.png"}>
+                        <button className={"border rounded-md border-gray-300 bg-gray-200 px-8 py-2 cursor-pointer text-gray-700"}>Download</button>
+                    </a>}
                 </div>
             </div>
 

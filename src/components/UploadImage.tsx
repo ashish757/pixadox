@@ -1,10 +1,12 @@
 import type {ChangeEvent} from "react";
 
+
 interface UploadProps {
     handleFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
 const UploadImage = ({handleFileChange}: UploadProps)  => {
+
 
     return (
         <div className="w-full px-40 flexjustify-center items-center">

@@ -23,8 +23,8 @@ export const encodeImageWithBinary = (imageData: ImageData, binary: string) => {
 }
 
 
-export const imageDataToUrl = (imageData: ImageData | null): string  => {
-    if(imageData == null) return "";
+export const imageDataToUrl = (imageData: ImageData | null): string | null  => {
+    if(imageData == null) return null;
 
     const canvas = document.createElement('canvas');
     canvas.width = imageData.width;
