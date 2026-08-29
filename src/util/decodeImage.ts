@@ -15,7 +15,7 @@ export const decodeImage = (imageData: ImageData): DecodedImageData => {
     let markerBinary = "";
     for(let i = 0; i<56; i++) {
         if(i >= pixels.length) break;
-        markerBinary += pixels[i];
+        markerBinary += pixels[i] % 2;
     }
 
     if(binaryToString(markerBinary) !== "%PI#XL%") {
@@ -30,11 +30,11 @@ export const decodeImage = (imageData: ImageData): DecodedImageData => {
     let dataSizeBinary = "";
     let dataTypeBinary = "";
 
-    for(let i =0; i<32; i++) {
+    for(let i =56; i<56+32; i++) {
         dataSizeBinary += pixels[i] % 2;
     }
 
-    for(let i = 32; i<40; i++) {
+    for(let i = 56+32; i<56+32+8; i++) {
         dataTypeBinary += pixels[i] % 2;
     }
 
@@ -45,7 +45,7 @@ export const decodeImage = (imageData: ImageData): DecodedImageData => {
     console.log(`dataSizeBinary: ${dataSizeBinary}, dataTypeBinary: ${dataTypeBinary}`);
     console.log(`Data Size: ${dataSize}, Data Type: ${dataType}`);
 
-    for (let i = 40; i < dataSize + 40; i++) {
+    for (let i = 56+32+8; i < dataSize + 56+32+8; i++) {
         if(i >= pixels.length) break;
         dataBinary += imageData.data[i] % 2;
     }
