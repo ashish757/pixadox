@@ -1,10 +1,9 @@
 import {useMemo, useState} from "react";
-import {imageDataToUrl} from "../util/encodeImage.ts";
-import {bitsToMegabytes} from "../util/convertStorageUnit.ts";
+import { bitsToMegabytes} from "../util/conversions.ts";
 import {useLocation} from "react-router-dom";
-import {imageToBinary} from "../util/decodeImage.ts";
-import {binaryToString} from "../util/binaryToString.ts";
-
+import {imageDataToUrl} from "../util/loadImage.ts";
+import {decodeImage} from "../util/decodeImage.ts";
+import {type DecodedImageData} from "../util/decodeImage.ts";
 
 
 const DecodePage = () => {
@@ -14,16 +13,15 @@ const DecodePage = () => {
 
     const image = location.state?.image as ImageData | null;
 
-    const [message, setMessage] = useState<string>("");
+    const [data, setData] = useState<DecodedImageData | null>(null);
 
 
     const imageUrl = useMemo(() => imageDataToUrl(image), [image]);
 
     const decodeHandler = () => {
         if(image == null) return;
-        const binary = imageToBinary(image);
-        const text = binaryToString(binary);
-        setMessage(text);
+        const data = decodeImage(image);
+        setData(data);
     }
 
 
@@ -42,10 +40,11 @@ const DecodePage = () => {
             </div>
             <div className="w-1/2">
 
-                <button className="" onClick={decodeHandler}>Decode</button>
+                <button className="border border-gray-300 px-4 py-2 bg-green-500" onClick={decodeHandler}>Decode</button>
 
                 <div>
-                    <p>{message}</p>
+                    Decoded Message:
+                    <p>{data?.data}</p>
                 </div>
             </div>
 
