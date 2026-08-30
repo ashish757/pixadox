@@ -15,8 +15,8 @@
     --color-accent-foreground: var(--accent-foreground);
     --color-border: var(--border);
     --color-ring: var(--ring);
-    --font-sans: 'DM Sans', 'DM Sans Fallback';
-    --font-mono: 'Roboto', 'monospace';
+    --font-sans: 'Roboto';
+    --font-mono: "IBM Plex Mono", 'monospace';
 }
 
 :root {
