@@ -78,9 +78,9 @@ const EncodePage = () => {
         link.click();
         document.body.removeChild(link);
 
-        setTimeout(() => {
-            navigate("/upload-decode");
-        }, 500);
+        // setTimeout(() => {
+        //     navigate("/upload-decode");
+        // }, 500);
     }
 
     if (!originalImage || originalImageUrl === null) return null;
@@ -141,7 +141,7 @@ const EncodePage = () => {
                                     onClick={handleDownloadAndTest}
                                     className={"border rounded-md border-emerald-500 bg-emerald-50 px-8 py-2 cursor-pointer text-emerald-700 font-bold hover:bg-emerald-100 transition-colors"}
                                 >
-                                    ↓ Download & Try Decoding
+                                    ↓ Download
                                 </button>
                             )}
                         </div>
