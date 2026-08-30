@@ -1,5 +1,3 @@
-
-
 import {
     ArrowUpRight,
     ArrowDown,
@@ -11,19 +9,27 @@ import {
 } from 'lucide-react'
 
 import {Link} from 'react-router-dom'
+import {
+    Image as ImageIcon,
+    Download,
+    Eye,
+    Upload,
+    ArrowRight
+} from 'lucide-react'
 
-const pixelRows = [
-    '00110110011001100110',
-    '11001001100110011001',
-    '01101100110011001100',
-    '10011001100110011001',
-    '00110011001100110011',
-    '11001100110011001100',
-    '01100110011001100110',
-    '10011001100110011001',
-    '00110110011001100110',
-    '11001001100110011001',
-]
+
+function FlowStep({ icon, label }: { icon: React.ReactNode; label: string }) {
+    return (
+        <div className="flex flex-col items-center gap-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card text-[#013b20] shadow-sm">
+                {icon}
+            </div>
+            <span className="text-center font-mono text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                {label}
+            </span>
+        </div>
+    )
+}
 
 function LandingPage() {
 
@@ -66,20 +72,42 @@ function LandingPage() {
                         <span className="flex items-center gap-2"><LockKeyhole className="h-3.5 w-3.5 text-primary" /> no uploads</span><span className="h-3 w-px bg-border" /><span className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> lossless PNG</span>
                     </div>
                 </div>
-                <div className="relative mx-auto w-full max-w-[530px] lg:ml-auto">
-                    <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-border bg-card p-4 shadow-[0_24px_80px_-32px_rgba(0,0,0,.5)] sm:p-6">
 
-                        <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                            <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_0_4px_var(--color-accent)]" /> Local processing
-                        </div>
+                <div className="relative mx-auto w-full max-w-[500px] lg:ml-auto">
+                    <div className="flex flex-col gap-10 rounded-[2rem] border-2 border-dashed border-[#013b20]/20 p-8 sm:p-10">
 
-                        <div className="flex items-center justify-center rounded-[1.4rem] bg-secondary p-5 sm:p-8">
-                            <div className="pixel-art grid w-full max-w-[330px] grid-cols-20 gap-1 opacity-90">
-                                {pixelRows.join('').split('').map((pixel, i) => <span key={i} className={`aspect-square rounded-[1px] ${pixel === '1' ? 'bg-primary' : 'bg-muted'}`} />)}
+                        {/* Encode Flow */}
+                        <div className="relative flex w-full flex-col">
+            <span className="absolute -left-12 top-1/2 -rotate-90 -translate-y-1/2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#013b20]/40">
+                Encode
+            </span>
+                            <div className="flex w-full items-center justify-between">
+                                <FlowStep icon={<ImageIcon size={20} />} label="Upload a PNG" />
+                                <ArrowRight size={16} className="text-muted-foreground/50" strokeWidth={3} />
+                                <FlowStep icon={<LockKeyhole size={20} />} label="Hide Your Data" />
+                                <ArrowRight size={16} className="text-muted-foreground/50" strokeWidth={3} />
+                                <FlowStep icon={<Download size={20} />} label="Download Encoded Image" />
                             </div>
                         </div>
+
+                        {/* Divider */}
+                        <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
+                        {/* Decode Flow */}
+                        <div className="relative flex w-full flex-col">
+            <span className="absolute -left-12 top-1/2 -rotate-90 -translate-y-1/2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#013b20]/40">
+                Decode
+            </span>
+                            <div className="flex w-full items-center justify-center gap-12">
+                                <FlowStep icon={<Upload size={20} />} label="Upload a Encoded Image" />
+                                <ArrowRight size={16} className="text-muted-foreground/50" strokeWidth={3} />
+                                <FlowStep icon={<Eye size={20} />} label="Extract Your Data" />
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+
             </section>
 
 
