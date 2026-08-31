@@ -1,8 +1,11 @@
 # Pixadox
+- [https://pixadox.vercel.app](https://pixadox.vercel.app)
 - Pixadox is a client side web application that uses steganography, to embed text and binary files like audio, image and docs
 - While making the smallest possible change in the original image, undetectable to human eye
 
-
+![img1](img1.png)
+![img2](img2.png)
+![img3](img3.png)
 
 # Features
 there arent much features it just does one core thing, but it does it well
