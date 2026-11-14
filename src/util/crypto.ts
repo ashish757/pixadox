@@ -14,7 +14,7 @@ const getPasswordKey = async (password: string): Promise<CryptoKey> => {
 
 const deriveAesKey = async (passwordKey: CryptoKey, salt: Uint8Array): Promise<CryptoKey> => {
     return window.crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt, iterations: ITERATIONS, hash: HASH },
+        { name: "PBKDF2", salt: salt as BufferSource, iterations: ITERATIONS, hash: HASH },
         passwordKey,
         { name: "AES-GCM", length: 256 },
         false,
@@ -30,23 +30,21 @@ export const encryptPayload = async (password: string, data: ArrayBuffer) => {
     const aesKey = await deriveAesKey(passwordKey, salt);
 
     const encryptedBuffer = await window.crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
+        { name: "AES-GCM", iv: iv as BufferSource },
         aesKey,
-        data
+        data as BufferSource
     );
 
     return { salt, iv, ciphertext: new Uint8Array(encryptedBuffer) };
 };
-
 
 export const decryptPayload = async (password: string, salt: Uint8Array, iv: Uint8Array, ciphertext: Uint8Array): Promise<ArrayBuffer> => {
     const passwordKey = await getPasswordKey(password);
     const aesKey = await deriveAesKey(passwordKey, salt);
 
     return window.crypto.subtle.decrypt(
-        { name: "AES-GCM", iv },
+        { name: "AES-GCM", iv: iv as BufferSource },
         aesKey,
-        ciphertext
+        ciphertext as BufferSource
     );
 };
-
