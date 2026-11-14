@@ -24,6 +24,7 @@ there arent much features it just does one core thing, but it does it well
 - Tailwind CSS
 - React router
 - Lucide-react
+- Web Crypto API
 
 
 # How to use
@@ -47,16 +48,24 @@ there arent much features it just does one core thing, but it does it well
 - then i change the parity of color value to represent the binary data,
 - odd value → 1, even value → 0, that means the color values changes by at most 1 and even in this case statically only 50% of times i will need to change
 
+### Encryption
+- no you can encrypt the message that you store in the image
+- a password is used to generate a cipher of your message then this cipher in encoded in the image
+
 ## Decoding
 - Again i read the raw pixel values of the image which is to be decoded
 - then according to the rules that i use to encode i extract a binary string out of the images color values which is based on their parity as mentioned in enode step
 - then i convert that binary string into text and return it to user
 
+### for encrypted encodings
+- a header flag in present to indicate whether the message is encrypted or not
+- if flag is true then then three things are extracted from the body of the image --> Salt + IV + Cipher 
+- then user is prompted for a possword and the passowrd + salt = IV is used to verify and decipher the inoformation
 
 ## Storing data other than text;
 - so to do this i attach some metadata along with the users data
 - like, size of data, type of data and a unique marker `%PI#XL%` to recognize if the image was encoded by pixadox or not, so that i can decode it properly
-- - marker takes 56 bits, data size take 32 bits, and data type takes 8 bits, so total 96 bits of metadata is added to the image
+- - marker takes 56 bits, data size take 32 bits, and data type takes 8 bits, 8 bits for flagging the password protection,  so total 104 bits of metadata is added to the image
 - and to reconstruct the data safely i use `Unit8ClampedArray`
 
 
@@ -71,4 +80,4 @@ there arent much features it just does one core thing, but it does it well
 ### Used some tailwind UI snippets from flowbite.com
 
 # Future
-- in next version i will add support for encryption, so that even if someone decodes the data, he wont be able to read it without the key
+- 

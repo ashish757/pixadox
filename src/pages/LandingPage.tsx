@@ -1,5 +1,4 @@
 import {
-    ArrowUpRight,
     ArrowDown,
     Check,
     FileImage,
@@ -15,8 +14,9 @@ import {
     Eye,
     Upload,
     ArrowRight
-} from 'lucide-react'
+} from 'lucide-react';
 
+import "./landingPage.css";
 
 function FlowStep({ icon, label }: { icon: React.ReactNode; label: string }) {
     return (
@@ -38,19 +38,15 @@ function LandingPage() {
             <div className="pointer-events-none fixed inset-0 bg-grid opacity-50" />
 
 
+            <div className={"text-center  my-10 font-mono text-2xl font-bold tracking-[0.18em]"}>
+                Pixadox
+            </div>
 
 
+            <section id="top" className="relative z-0 mx-auto grid max-w-7xl  items-center gap-4 px-5 pb-20 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:px-12 lg:pb-28">
 
-            <section id="top" className="relative z-0 mx-auto grid max-w-7xl pt-20 items-center gap-4 px-5 pb-20 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:px-12 lg:pb-28">
                 <div>
-                    <div className={"flex items-center gap-2 mb-10 justify-center"}>
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-primary shadow-sm">
-                            <span className="grid grid-cols-3 gap-0.5">
-                                {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => <span key={i} className={`h-1.5 w-1.5 rounded-[1px] ${[0, 2, 4, 8].includes(i) ? 'bg-primary' : 'bg-accent'}`} />)}
-                            </span>
-                        </span>
-                        <span className="font-mono text-xl font-bold tracking-[0.18em]">Pixadox </span>
-                    </div>
+
 
                     <h1 className="max-w-3xl text-balance font-mono text-5xl font-bold leading-[1.02] tracking-[-0.06em] sm:text-7xl lg:text-[5.8rem]">
                         Hide in<br /><span className="text-primary">plain sight.</span>
@@ -60,18 +56,14 @@ function LandingPage() {
                     </p>
                     <div className="mt-10 flex flex-col gap-4 sm:flex-row">
                         <Link to="/upload-encode" className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary px-8 py-4 text-base font-bold text-primary-foreground transition-all hover:-translate-y-1 hover:shadow-[0_12px_24px_-8px_var(--color-primary)] shadow-lg">
-                            Encode some data <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                            Encode image (text, doc, audio, image)
                         </Link>
                         <Link to="/upload-decode" className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-border/80 bg-card px-8 py-4 text-base font-bold transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground shadow-sm hover:shadow-md">
-                            Decode an image <ArrowRight className="h-5 w-5" />
+                            Decode  image
                         </Link>
                     </div>
 
-                    <div className="mt-6 pl-4">
-                        <a href="#how-it-works" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                            Or scroll down to see the method <ArrowDown className="h-5 w-5" />
-                        </a>
-                    </div>
+
                     <div className="mt-10 flex items-center gap-5 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                         <span className="flex items-center gap-2"><LockKeyhole className="h-3.5 w-3.5 text-primary" /> no uploads</span><span className="h-3 w-px bg-border" /><span className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> No Data loss in image</span>
                     </div>
@@ -81,9 +73,9 @@ function LandingPage() {
                     <div className="flex flex-col gap-10 rounded-[2rem] border-2 border-dashed border-[#013b20]/20 p-8 sm:p-10">
 
                         <div className="relative flex w-full flex-col">
-            <span className="absolute -left-12 top-1/2 -rotate-90 -translate-y-1/2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#013b20]">
-                Encode
-            </span>
+                            <span className="absolute -left-12 top-1/2 -rotate-90 -translate-y-1/2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#013b20]">
+                                Encode
+                            </span>
                             <div className="flex w-full items-center justify-between">
                                 <FlowStep icon={<ImageIcon size={20} />} label="Upload a PNG" />
                                 <ArrowRight size={16} className="text-muted-foreground/50" strokeWidth={3} />
@@ -112,21 +104,28 @@ function LandingPage() {
             </section>
 
 
-            <section id="how-it-works" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+            <div className="mt-6 w-full pl-4 text-center">
+                <a href="#how-it-works" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                    Or scroll down to see the method <ArrowDown className="h-5 w-5" />
+                </a>
+            </div>
+
+
+            <section id="how-it-works" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28 min-h-screen">
                 <div className="flex flex-col justify-between gap-5 border-b border-border pb-8 sm:flex-row sm:items-end">
                     <div>
                         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">The method</p>
                         <h2 className="mt-3 font-mono text-3xl font-bold tracking-[-0.04em] sm:text-4xl">
-                            Smallest change.
+                            PIXEL Steganography
                         </h2>
                     </div>
                     <p className="max-w-sm leading-7 text-muted-foreground">
-                        Pixadox works at the pixel level, not the network level. That means your secret never reaches a serve.
+                        Pixadox manipulates the pixel on client. <br/> Your secret and images never reaches  server.
                     </p>
                 </div>
                 <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
                     <Feature icon={<FileImage />} title="Choose a PNG Image" text="Upload the image directly from your device. Image stays on device." />
-                    <Feature icon={<Sparkles />} title="Choose A Message" text="Your secreset gets encoded into the image, which only pixadox can see (password protection comming soon)." />
+                    <Feature icon={<Sparkles />} title="Choose A Message" text="Your secreset gets encoded into the image, which only pixadox can decode with you entering the password the dicphier the data." />
                     <Feature icon={<Monitor />} title="Share the image" text="The result looks exactly the same. Only Pixadox knows the difference." />
                 </div>
             </section>
@@ -140,3 +139,4 @@ function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; 
 
 
 export default LandingPage
+
