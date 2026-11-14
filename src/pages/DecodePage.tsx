@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { bitsToMegabytes } from "../util/conversions.ts";
 import { useLocation, useNavigate } from "react-router-dom";
 import { imageDataToUrl } from "../util/loadImage.ts";
-import { decodeImage } from "../util/decodeImage.ts";
-import { type DecodedImageData } from "../util/decodeImage.ts";
-import { ArrowLeft, Home, Lock } from "lucide-react";
+import { decodeImage, type DecodedImageData } from "../util/decodeImage.ts";
+import { decryptPayload } from "../util/crypto.ts";
+import { ArrowLeft, Home, Lock, Unlock, KeyRound, AlertTriangle } from "lucide-react";
 
 const DecodePage = () => {
     const location = useLocation();
@@ -15,6 +15,10 @@ const DecodePage = () => {
     const [data, setData] = useState<DecodedImageData | null>(null);
     const [isDecoding, setIsDecoding] = useState<boolean>(true);
 
+    const [isLocked, setIsLocked] = useState<boolean>(true);
+    const [password, setPassword] = useState<string>("");
+    const [decryptError, setDecryptError] = useState<string>("");
+
     const imageUrl = useMemo(() => imageDataToUrl(image), [image]);
 
     useEffect(() => {
@@ -23,75 +27,130 @@ const DecodePage = () => {
             return;
         }
 
-        // Defer the heavy computation to allow the initial UI to paint first
         const timer = setTimeout(() => {
             if (image) {
                 const decoded = decodeImage(image);
                 setData(decoded);
+                if (decoded.isEncrypted) {
+                    setIsLocked(true);
+                }
                 setIsDecoding(false);
             }
-        }, 50); // A 50ms delay is enough to guarantee the browser paints the spinner
+        }, 50);
 
-        // Cleanup timer if component unmounts early
         return () => clearTimeout(timer);
     }, [image, imageUrl, navigate]);
 
-    // Dynamic rendering function to handle different data types safely
+    const handleDecrypt = async () => {
+        if (!data || !data.data || typeof data.data === 'string' || data.data instanceof Blob) return;
+
+        setDecryptError("");
+        try {
+            const buffer = data.data as ArrayBuffer;
+
+            const salt = new Uint8Array(buffer, 0, 16);
+            const iv = new Uint8Array(buffer, 16, 12);
+            const ciphertext = new Uint8Array(buffer, 28);
+
+            const decryptedBuffer = await decryptPayload(password, salt, iv, ciphertext);
+
+            let extractedData: string | Blob;
+            if (data.dataType === 1) {
+                extractedData = new TextDecoder().decode(decryptedBuffer);
+            } else {
+                let mimeType = "application/octet-stream";
+                if (data.dataType === 2) mimeType = "image/png";
+                if (data.dataType === 3) mimeType = "audio/mpeg";
+                extractedData = new Blob([decryptedBuffer], { type: mimeType });
+            }
+
+            setData({ ...data, data: extractedData, isEncrypted: false });
+            setIsLocked(false);
+        } catch (err) {
+            setDecryptError("Incorrect password or the payload has been corrupted.");
+        }
+    };
+
     const renderDecodedData = () => {
         if (!data || data.dataSize === 0) {
             return <p className="text-red-500 font-bold mt-2">No valid Pixadox payload found in this image.</p>;
         }
 
-        // 1: Text
-        if (data.dataType === 1 && typeof data.data === "string") {
+        if (isLocked) {
             return (
-                <p className="whitespace-pre-wrap break-words text-gray-700 mt-2">
-                    {data.data}
-                </p>
+                <div className="flex flex-col items-center justify-center p-8 mt-4 bg-card border border-border rounded-xl shadow-sm text-center">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
+                        <Lock size={32} />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">Encrypted Payload</h3>
+                    <p className="text-muted-foreground text-sm mb-6 max-w-sm">
+                        This image contains a secure, AES-GCM encrypted payload. Enter the password to unlock the data.
+                    </p>
+
+                    <div className="w-full max-w-xs flex flex-col gap-3">
+                        <div className="relative">
+                            <KeyRound size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleDecrypt()}
+                                placeholder="Enter password"
+                                className="w-full pl-10 pr-4 py-2 border border-border rounded-md focus:outline-primary"
+                            />
+                        </div>
+                        <button
+                            onClick={handleDecrypt}
+                            disabled={!password}
+                            className="bg-primary text-primary-foreground font-bold py-2 rounded-md disabled:opacity-50 transition-colors"
+                        >
+                            Decrypt Data
+                        </button>
+                    </div>
+                    {decryptError && (
+                        <p className="text-red-500 text-sm font-bold mt-4 flex items-center gap-2">
+                            <AlertTriangle size={16} /> {decryptError}
+                        </p>
+                    )}
+                </div>
             );
         }
 
-        // Handle Binary Blobs
+        if (data.dataType === 1 && typeof data.data === "string") {
+            return <p className="whitespace-pre-wrap break-words text-gray-700 mt-2">{data.data}</p>;
+        }
+
         if (data.data instanceof Blob) {
             const objectUrl = URL.createObjectURL(data.data);
 
-            // 2: Image
             if (data.dataType === 2) {
                 return (
                     <div className="flex flex-col gap-4 mt-4">
                         <img src={objectUrl} alt="Extracted payload" className="max-h-64 object-contain rounded-md border border-gray-300" />
                         <a href={objectUrl} download="extracted_image.png" className="self-start">
-                            <button className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors">
-                                Download Image
-                            </button>
+                            <button className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors">Download Image</button>
                         </a>
                     </div>
                 );
             }
 
-            // 3: Audio
             if (data.dataType === 3) {
                 return (
                     <div className="flex flex-col gap-4 w-full mt-4">
                         <audio controls src={objectUrl} className="w-full" />
                         <a href={objectUrl} download="extracted_audio.mp3" className="self-start">
-                            <button className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors">
-                                Download Audio
-                            </button>
+                            <button className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors">Download Audio</button>
                         </a>
                     </div>
                 );
             }
 
-            // 4: Generic File
             if (data.dataType === 4) {
                 return (
                     <div className="flex flex-col items-center justify-center p-8 mt-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded-md">
                         <p className="mb-4 font-bold text-gray-700">File payload successfully extracted.</p>
                         <a href={objectUrl} download="extracted_payload.bin">
-                            <button className="bg-green-500 text-white px-8 py-3 rounded-md hover:bg-green-600 transition-colors font-bold">
-                                Download File
-                            </button>
+                            <button className="bg-green-500 text-white px-8 py-3 rounded-md hover:bg-green-600 transition-colors font-bold">Download File</button>
                         </a>
                     </div>
                 );
@@ -105,7 +164,6 @@ const DecodePage = () => {
 
     return (
         <main className="flex-col min-h-screen items-center bg-background p-2">
-
             <div className="w-full flex justify-between items-center px-8 py-4">
                 <button
                     onClick={() => navigate("/upload-decode")}
@@ -133,21 +191,24 @@ const DecodePage = () => {
             <div className="w-full flex space-x-2 px-8 py-4">
                 <div className={"w-1/2"}>
                     <div className={"border-2 border-primary rounded-2xl overflow-hidden "}>
-                        <h2 className={"bg-secondary-foreground font-bold text-green-300 text-2xl pl-4 py-2"}>Uploaded Image</h2>
+                        <h2 className={"bg-primary font-bold text-green-300 text-2xl pl-4 py-2"}>Uploaded Image</h2>
                         <div className={"flex justify-center items-center"}>
                             <img className={""} src={imageUrl} alt={"testing"}/>
                         </div>
                     </div>
                 </div>
-                <div className="w-1/2 flex items-center justify-center border-2 border-gray-300 rounded-2xl p-4">
+                <div className="w-1/2 flex flex-col items-center justify-center border-2 border-gray-300 rounded-2xl p-4 bg-secondary">
                     {isDecoding ? (
                         <div className="flex flex-col items-center">
-                            <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
                             <p className="font-bold text-gray-700">Extracting secret data...</p>
                         </div>
                     ) : (
-                        <div className="w-full h-full">
-                            <h3 className="font-bold text-lg border-b border-gray-200 pb-2">Decoded Payload:</h3>
+                        <div className="w-full h-full bg-white rounded-xl p-4 border border-border">
+                            <h3 className="font-bold text-lg border-b border-border pb-2 flex items-center gap-2">
+                                {isLocked ? <Lock size={18} className="text-primary"/> : <Unlock size={18} className="text-green-500" />}
+                                Decoded Payload:
+                            </h3>
                             {renderDecodedData()}
                         </div>
                     )}
@@ -158,39 +219,20 @@ const DecodePage = () => {
                 <div className="w-1/2">
                     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 border border-green-700 rounded-2xl p-4 bg-secondary">
                         <div className="pl-4 sm:pl-5">
-                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                                Resolution
-                            </p>
-                            <p className="font-mono text-lg text-secondary-foreground">
-                                {image?.height}x{image?.width}
-                            </p>
+                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Dimensions</p>
+                            <p className="font-mono text-lg text-secondary-foreground">{image?.height}px x {image?.width}px</p>
                         </div>
-
                         <div className="border-l border-zinc-700/50 pl-4 sm:pl-5">
-                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                                Total Pixels
-                            </p>
-                            <p className="font-mono text-lg text-secondary-foreground">
-                                {(image?.data.length || 0) / 4}
-                            </p>
+                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Total Pixels</p>
+                            <p className="font-mono text-lg text-secondary-foreground">{(image?.data.length || 0) / 4}</p>
                         </div>
-
                         <div className="border-l border-zinc-700/50 pl-4 sm:pl-5">
-                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                                Total Colors
-                            </p>
-                            <p className="font-mono text-lg text-secondary-foreground">
-                                {image?.data.length}
-                            </p>
+                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Total Colors</p>
+                            <p className="font-mono text-lg text-secondary-foreground">{image?.data.length}</p>
                         </div>
-
                         <div className="border-l border-zinc-700/50 pl-4 sm:pl-5">
-                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                                Total Space
-                            </p>
-                            <p className="font-mono text-lg text-secondary-foreground">
-                                {bitsToMegabytes((image?.data.length || 0) * 0.75)}
-                            </p>
+                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Max Capacity</p>
+                            <p className="font-mono text-lg text-secondary-foreground">{bitsToMegabytes(((image?.data.length || 0) * 0.75) - 104)}</p>
                         </div>
                     </div>
                 </div>
