@@ -62,9 +62,10 @@
 import { binaryToString, binaryToArrayBuffer } from "./conversions.ts";
 
 export interface DecodedImageData {
-    data: string | Blob;
+    data: string | Blob | ArrayBuffer;
     dataSize: number;
     dataType: number;
+    isEncrypted: boolean;
 }
 
 export const decodeImage = (imageData: ImageData): DecodedImageData => {
@@ -90,12 +91,25 @@ export const decodeImage = (imageData: ImageData): DecodedImageData => {
     const markerBinary = readBits(56);
 
     if (binaryToString(markerBinary) !== "%PI#XL%") {
-        return { data: "", dataSize: 0, dataType: 0 };
+        return { data: "", dataSize: 0, dataType: 0, isEncrypted: false };
     }
 
     const dataSize = parseInt(readBits(32), 2);
     const dataType = parseInt(readBits(8), 2);
+
+    const isEncrypted = parseInt(readBits(8), 2) === 1;
+
     const dataBinary = readBits(dataSize);
+
+
+    if (isEncrypted) {
+        return {
+            data: binaryToArrayBuffer(dataBinary),
+            dataSize,
+            dataType,
+            isEncrypted
+        };
+    }
 
     let extractedData: string | Blob;
 
@@ -110,5 +124,5 @@ export const decodeImage = (imageData: ImageData): DecodedImageData => {
         extractedData = new Blob([buffer], { type: mimeType });
     }
 
-    return { data: extractedData, dataSize, dataType };
+    return { data: extractedData, dataSize, dataType, isEncrypted };
 }

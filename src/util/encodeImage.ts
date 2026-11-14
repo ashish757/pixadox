@@ -59,7 +59,12 @@ export const dataTypes = {
     file: 4
 }
 
-export const encodeImage = (imageData: ImageData, binary: string, type: "text" | "image" | "audio" | "file" = "text") => {
+export const encodeImage = (
+    imageData: ImageData,
+    binary: string,
+    type: "text" | "image" | "audio" | "file" = "text",
+    isEncrypted: boolean = false
+) => {
     const newPixels = new Uint8ClampedArray(imageData.data);
     const newImageData = new ImageData(newPixels, imageData.width, imageData.height);
     const pixels = newImageData.data;
@@ -70,10 +75,12 @@ export const encodeImage = (imageData: ImageData, binary: string, type: "text" |
     const dataType = dataTypes[type];
     const binaryDataType = dataType.toString(2).padStart(8, '0');
 
+    const binaryIsEncrypted = (isEncrypted ? 1 : 0).toString(2).padStart(8, '0');
+
     const marker = "%PI#XL%";
     const binaryMarker = marker.split('').map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join('');
 
-    const dataToEncode = binaryMarker + binarySize + binaryDataType + binary;
+    const dataToEncode = binaryMarker + binarySize + binaryDataType + binaryIsEncrypted + binary;
 
     let dataIndex = 0;
 
@@ -90,3 +97,5 @@ export const encodeImage = (imageData: ImageData, binary: string, type: "text" |
 
     return newImageData;
 }
+
+
