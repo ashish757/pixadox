@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { encodeImage } from "../util/encodeImage.ts";
-import { imageDataToUrl } from "../util/loadImage.ts";
+import { imageDataToUrl, getAccentColor } from "../util/loadImage.ts";
 import { stringToBinary, bitsToMegabytes, arrayBufferToBinary } from "../util/conversions.ts";
 import { encryptPayload } from "../util/crypto.ts";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Home, Lock, Unlock, Key } from "lucide-react";
+import { ArrowLeft, Home, Lock, Unlock, Key, Download } from "lucide-react";
 
 type DataType = "text" | "image" | "audio" | "file";
 
@@ -20,7 +20,6 @@ const EncodePage = () => {
     const [message, setMessage] = useState<string>("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [fileError, setFileError] = useState<string>("");
-
 
     const [isEncrypting, setIsEncrypting] = useState<boolean>(false);
     const [password, setPassword] = useState("");
@@ -40,6 +39,19 @@ const EncodePage = () => {
             navigate("/upload-encode", { replace: true });
         }
     }, [originalImage, navigate]);
+
+    useEffect(() => {
+        if (originalImage) {
+            const { r, g, b } = getAccentColor(originalImage);
+            document.documentElement.style.setProperty('--image-accent', `${r} ${g} ${b}`);
+        } else {
+            document.documentElement.style.setProperty('--image-accent', '34 197 94');
+        }
+
+        return () => {
+            document.documentElement.style.setProperty('--image-accent', '34 197 94');
+        };
+    }, [originalImage]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -67,7 +79,6 @@ const EncodePage = () => {
                 setFileError("A password is required for encryption.");
                 return;
             }
-
 
             let buffer: ArrayBuffer;
             if(dataType === "text") {
@@ -118,8 +129,10 @@ const EncodePage = () => {
     if (!originalImage || originalImageUrl === null) return null;
 
     return (
-        <main className="flex-col min-h-screen items-center bg-background p-2">
-            <div className="w-full flex justify-between items-center px-8 py-4">
+        <main className="flex flex-col min-h-screen items-center bg-background pb-12">
+
+            {/* Navigation */}
+            <div className="w-full flex justify-between items-center px-8 py-6 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <button
                     onClick={() => navigate("/upload-encode")}
                     className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-mono text-sm uppercase tracking-wider transition-colors"
@@ -129,80 +142,93 @@ const EncodePage = () => {
                 <div className="flex gap-4">
                     <button
                         onClick={() => navigate("/")}
-                        className="flex items-center gap-2 border border-border px-5 py-2 rounded-full hover:bg-secondary font-bold text-sm transition-colors shadow-sm"
+                        className="flex items-center gap-2 border border-border px-5 py-2 rounded-full hover:bg-secondary font-bold text-sm transition-colors shadow-sm bg-card"
                     >
                         <Home size={16} /> Home
                     </button>
                     <button
                         onClick={() => navigate("/upload-decode")}
-                        className="flex items-center gap-2 border border-border px-5 py-2 rounded-full hover:bg-secondary font-bold text-sm transition-colors shadow-sm"
+                        className="flex items-center gap-2 border border-border px-5 py-2 rounded-full hover:bg-secondary font-bold text-sm transition-colors shadow-sm bg-card"
                     >
                         <Unlock size={16} /> Decode
                     </button>
                 </div>
             </div>
 
-            <div className="w-full flex space-x-2 px-8 py-4">
-                <div className={"w-1/2"}>
-                    <div className={"border-2 border-primary rounded-2xl overflow-hidden "}>
-                        <h2 className={"bg-primary font-bold text-green-300 text-2xl pl-4 py-2"}>Original Image</h2>
-                        <div className={"flex justify-center items-center"}>
-                            <img className={""} src={originalImageUrl} alt={"testing"}/>
+            {/* Image Comparison Section */}
+            <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 px-8 py-8">
+                <div className="w-full lg:w-1/2">
+                    <div className="border border-image-accent/60 bg-card rounded-2xl overflow-hidden shadow-sm flex flex-col h-full">
+                        <h2 className="bg-image-accent/50 text-image-accent border-b border-image-accent/50 font-bold text-lg px-5 py-3 flex items-center gap-2">
+                            Original Image
+                        </h2>
+                        <div className="flex-1 flex justify-center items-center p-4 bg-black/5">
+                            <img className="max-h-[400px] object-contain rounded-lg shadow-sm" src={originalImageUrl} alt="Original" />
                         </div>
                     </div>
                 </div>
-                <div className={"w-1/2"}>
-                    <div className={"border-2 border-red rounded-2xl overflow-hidden h-full relative"}>
-                        <h2 className={"font-bold text-orange-400 text-2xl pl-4 py-2 bg-primary"}>Encoded Image</h2>
-                        <div className={"flex justify-center items-center"}>
-                            {
-                                modifiedImageUrl ? ( <>
-                                        <img src={modifiedImageUrl} alt={"not modified yet"} />
-                                    </>
-                                ) : (
-                                    <p className={"mt-32 font-semibold text-xl text-secondary-foreground px-30 text-center"}>Encode a message to see the modified image with your data hidden inside</p>
-                                )
-                            }
-                        </div>
-                        <div className={"absolute p-4 flex gap-4 bottom-1 right-1"}>
-                            {modifiedImageUrl && (
-                                <button
-                                    onClick={handleDownloadAndTest}
-                                    className={"border rounded-md border-emerald-500 bg-emerald-50 px-8 py-2 cursor-pointer text-emerald-700 font-bold hover:bg-emerald-100 transition-colors"}
-                                >
-                                    ↓ Download & Try Decoding
-                                </button>
+
+                <div className="w-full lg:w-1/2">
+                    <div className="border border-image-accent/60 bg-card rounded-2xl overflow-hidden shadow-sm flex flex-col h-full relative">
+                        <h2 className="bg-image-accent/50 text-image-accent border-b border-image-accent/50 font-bold text-lg px-5 py-3 flex items-center gap-2">
+                            Encoded Image
+                        </h2>
+                        <div className="flex-1 flex justify-center items-center p-4 bg-black/5 min-h-[300px]">
+                            {modifiedImageUrl ? (
+                                <img className="max-h-[400px] object-contain rounded-lg shadow-sm" src={modifiedImageUrl} alt="Encoded" />
+                            ) : (
+                                <div className="text-center px-8">
+                                    <div className="w-16 h-16 mx-auto bg-image-accent/50 rounded-full flex items-center justify-center mb-4">
+                                        <Lock size={24} className="text-image-accent/50" />
+                                    </div>
+                                    <p className="font-medium text-muted-foreground text-balance">
+                                        Encode a payload below to preview the modified image
+                                    </p>
+                                </div>
                             )}
                         </div>
+                        {modifiedImageUrl && (
+                            <div className="absolute bottom-4 right-4">
+                                <button
+                                    onClick={handleDownloadAndTest}
+                                    className="flex items-center gap-2 border border-image-accent/50 bg-card/90 backdrop-blur-sm px-6 py-2.5 rounded-full cursor-pointer text-image-accent font-bold hover:bg-image-accent hover:text-white transition-all shadow-md"
+                                >
+                                    <Download size={18} /> Download & Try Decoding
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            <div className="w-full flex space-x-2 px-8 py-4">
-                <div className="w-1/2">
-                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4 border border-green-700 rounded-2xl p-4 bg-secondary">
-                        <div className="pl-4 sm:pl-5">
-                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Dimensions</p>
-                            <p className="font-mono text-lg text-secondary-foreground">{originalImage.height}px x {originalImage.width}px</p>
+            {/* Controls Section */}
+            <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 px-8">
+                {/* Stats Panel */}
+                <div className="w-full lg:w-1/2">
+                    <div className="grid grid-cols-2 gap-4 border border-image-accent/50 rounded-2xl p-6 bg-image-accent/20 shadow-sm h-full content-start">
+                        <div>
+                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dimensions</p>
+                            <p className="font-mono text-xl font-medium text-foreground">{originalImage.height}px × {originalImage.width}px</p>
                         </div>
-                        <div className="border-l border-zinc-700/50 pl-4 sm:pl-5">
-                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Total Pixels</p>
-                            <p className="font-mono text-lg text-secondary-foreground">{(originalImage.data.length) / 4}</p>
+                        <div>
+                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Pixels</p>
+                            <p className="font-mono text-xl font-medium text-foreground">{(originalImage.data.length / 4).toLocaleString()}</p>
                         </div>
-                        <div className="border-l border-zinc-700/50 pl-4 sm:pl-5">
-                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Total Colors</p>
-                            <p className="font-mono text-lg text-secondary-foreground">{originalImage.data.length}</p>
+                        <div>
+                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">RGB Channels</p>
+                            <p className="font-mono text-xl font-medium text-foreground">{((originalImage.data.length / 4) * 3).toLocaleString()}</p>
                         </div>
-                        <div className="border-l border-zinc-700/50 pl-4 sm:pl-5">
-                            <p className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Capacity</p>
-                            <p className="font-mono text-lg text-secondary-foreground">{bitsToMegabytes(availableBytes * 8)}</p>
+                        <div>
+                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-image-accent">Safe Capacity</p>
+                            <p className="font-mono text-xl font-bold text-image-accent">{bitsToMegabytes(availableBytes * 8)}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-1/2">
-                    <div className={"flex-col border-2 border-black rounded-2xl overflow-hidden bg-secondary"}>
-                        <div className="flex bg-secondary-foreground">
+                {/* Encoding Panel */}
+                <div className="w-full lg:w-1/2">
+                    <div className="flex flex-col border border-border rounded-2xl overflow-hidden bg-card shadow-sm">
+                        <div className="flex bg-secondary">
                             {(['text', 'image', 'audio', 'file'] as DataType[]).map((type) => (
                                 <button
                                     key={type}
@@ -210,10 +236,10 @@ const EncodePage = () => {
                                         setDataType(type);
                                         setFileError("");
                                     }}
-                                    className={`flex-1 py-3 font-mono text-sm uppercase font-bold transition-colors ${
+                                    className={`flex-1 py-3.5 font-mono text-sm uppercase font-bold transition-colors border-b-2 ${
                                         dataType === type
-                                            ? 'bg-secondary text-black'
-                                            : 'text-gray-200 hover:text-gray-200'
+                                            ? 'bg-card text-image-accent border-image-accent'
+                                            : 'text-muted-foreground border-transparent hover:text-foreground hover:bg-card/50'
                                     }`}
                                 >
                                     {type}
@@ -221,17 +247,17 @@ const EncodePage = () => {
                             ))}
                         </div>
 
-                        <div className={"px-6 pt-6"}>
+                        <div className="p-6">
                             {dataType === 'text' ? (
                                 <textarea
-                                    className={"w-full border p-4 rounded-md bg-white border-gray-300 focus:outline-1"}
-                                    rows={4}
+                                    className="w-full border border-border p-4 rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-image-accent/50 resize-none"
+                                    rows={5}
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
-                                    placeholder={"Enter the secret message..."}
+                                    placeholder="Enter your secret message here..."
                                 />
                             ) : (
-                                <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-400 rounded-md bg-white hover:bg-gray-50 transition-colors relative">
+                                <div className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-border rounded-xl bg-background hover:bg-secondary/50 hover:border-image-accent/50 transition-colors relative group">
                                     <input
                                         type="file"
                                         accept={
@@ -240,60 +266,67 @@ const EncodePage = () => {
                                                     '*/*'
                                         }
                                         onChange={handleFileChange}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                     />
-                                    <p className="text-gray-600 font-bold">Click or drag {dataType} to upload</p>
-                                    <p className="text-sm text-gray-500 mt-2">Max allowed size: {(availableBytes / 1024 / 1024).toFixed(2)} MB</p>
+                                    <div className="text-muted-foreground group-hover:text-image-accent transition-colors mb-2">
+                                        <Lock size={32} />
+                                    </div>
+                                    <p className="text-foreground font-bold">Click or drag {dataType} to upload</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Max capacity: {(availableBytes / 1024 / 1024).toFixed(2)} MB</p>
                                 </div>
                             )}
 
-                            <div className="mt-4 p-4 border border-border rounded-lg bg-card">
+                            {/* Security Section */}
+                            <div className="mt-6 p-5 border border-border rounded-xl bg-secondary/30">
                                 <label className="flex items-center gap-3 cursor-pointer select-none">
                                     <input
                                         type="checkbox"
-                                        className="w-5 h-5 accent-primary cursor-pointer"
+                                        className="w-5 h-5 accent-image-accent cursor-pointer rounded"
                                         checked={isEncrypting}
                                         onChange={(e) => {
                                             setIsEncrypting(e.target.checked);
                                             setFileError("");
                                         }}
                                     />
-                                    <span className="font-bold text-sm flex items-center gap-2">
-                                        <Lock size={16} className={isEncrypting ? "text-primary" : "text-muted-foreground"} />
-                                        Encrypt with Password (AES-GCM)
+                                    <span className="font-bold text-sm flex items-center gap-2 text-foreground">
+                                        <Lock size={16} className={isEncrypting ? "text-image-accent" : "text-muted-foreground"} />
+                                        Encrypt Payload (AES-GCM)
                                     </span>
                                 </label>
 
-
                                 {isEncrypting && (
-                                    <div className="mt-4 relative">
+                                    <div className="mt-4 relative animate-in fade-in slide-in-from-top-2 duration-200">
                                         <Key size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                         <input
                                             type="password"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="Enter a strong password"
-                                            className="w-full pl-10 pr-4 py-2 border border-border rounded-md bg-white focus:outline-primary"
+                                            placeholder="Enter a secure decryption password"
+                                            className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-image-accent/50"
                                         />
                                     </div>
                                 )}
                             </div>
 
-                            <div className="h-8 mt-2">
-                                {fileError && <p className="text-red-600 text-sm font-semibold">{fileError}</p>}
+                            <div className="h-6 mt-3">
+                                {fileError && <p className="text-red-500 text-sm font-semibold flex items-center gap-1">⚠️ {fileError}</p>}
                                 {selectedFile && !fileError && dataType !== 'text' && (
-                                    <p className="text-green-600 text-sm font-semibold">✓ Ready to encode: {selectedFile.name}</p>
+                                    <p className="text-green-600 dark:text-green-400 text-sm font-semibold flex items-center gap-1">✓ Ready: {selectedFile.name}</p>
                                 )}
                             </div>
                         </div>
 
-                        <div className={"p-4 flex gap-4 bg-secondary border-t border-border"}>
+                        <div className="p-6 pt-0 mt-auto">
                             <button
-                                className={"border rounded-md border-gray-400 bg-gray-200 px-8 py-2 cursor-pointer text-gray-800 font-bold disabled:opacity-50 disabled:cursor-not-allowed"}
+                                className="w-full bg-image-accent hover:bg-image-accent/90 text-white px-8 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex justify-center items-center gap-2"
                                 onClick={encodeHandler}
                                 disabled={(dataType !== 'text' && !selectedFile) || (dataType === 'text' && !message) || (isEncrypting && !password)}
                             >
-                                {isEncrypting ? `Encrypt & Encode ${dataType}` : `Encode ${dataType}`}
+                                {isEncrypting ? (
+                                    <><Lock size={18} /> Encrypt & Embed {dataType}</>
+                                ) : (
+                                    <><Unlock size={18} /> Embed {dataType}</>
+                                )}
                             </button>
                         </div>
                     </div>

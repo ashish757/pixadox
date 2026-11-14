@@ -41,3 +41,26 @@ export const imageDataToUrl = (imageData: ImageData | null): string | null  => {
 
     return canvas.toDataURL('image/png');
 }
+
+export const getAccentColor = (imageData: ImageData) => {
+    const data=  imageData.data;
+    let r=0, g=0, b=0;
+
+    const step =40;
+    let sampledPixels = 0;
+
+    for(let i =0; i<data.length; i += step) {
+        r += data[i];
+        g += data[i + 1];
+        b += data[i + 2];
+        sampledPixels++;
+    }
+
+
+    return {
+        r: Math.floor(r / sampledPixels),
+        g: Math.floor(g / sampledPixels),
+        b: Math.floor(b / sampledPixels)
+    };
+
+}
