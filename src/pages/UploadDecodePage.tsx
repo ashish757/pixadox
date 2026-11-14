@@ -14,6 +14,7 @@ const UploadDecodePage = () => {
         const imgUrl = URL.createObjectURL(file);
         const data = await getImageData(imgUrl);
 
+        e.target.value = "";
         if (data) navigate("/decode", { state: { image: data } });
     }
 

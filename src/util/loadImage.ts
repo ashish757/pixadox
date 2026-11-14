@@ -1,30 +1,30 @@
 // so basically this is to load the image into the canvas to get the raw pixel values of the image
 
-export const getImageData = (imgUrl: string): Promise<ImageData> => {
-    return new  Promise((resolve, reject) => {
+export const getImageData = (imgUrl: string): Promise<ImageData | null> => {
+    return new Promise((resolve) => {
         const img = new Image();
-
         img.onload = () => {
             const canvas = document.createElement("canvas");
-            canvas.height = img.height;
             canvas.width = img.width;
+            canvas.height = img.height;
 
             const ctx = canvas.getContext("2d");
-            if(!ctx) {
-                reject(new Error("Could not get canvas context"));
+            if (!ctx) {
+                resolve(null);
                 return;
             }
 
             ctx.drawImage(img, 0, 0);
+            resolve(ctx.getImageData(0, 0, img.width, img.height));
+        };
 
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            resolve(imageData);
-        }
+        img.onerror = () => {
+            resolve(null);
+        };
 
-        img.onerror  = () => reject(new Error("Image failed to load"));
         img.src = imgUrl;
-    })
-}
+    });
+};
 
 
 export const imageDataToUrl = (imageData: ImageData | null): string | null  => {

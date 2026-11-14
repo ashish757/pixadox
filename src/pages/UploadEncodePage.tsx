@@ -13,6 +13,7 @@ const UploadEncodePage = () => {
 
         const imgUrl = URL.createObjectURL(file);
         const data = await getImageData(imgUrl);
+        e.target.value = "";
 
         if (data) navigate("/encode", { state: { originalImage: data } });
     }
