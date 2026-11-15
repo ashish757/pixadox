@@ -8,28 +8,10 @@ import {
 } from 'lucide-react'
 
 import {Link} from 'react-router-dom'
-import {
-    Image as ImageIcon,
-    Download,
-    Eye,
-    Upload,
-    ArrowRight
-} from 'lucide-react';
+
 
 import "./landingPage.css";
 
-function FlowStep({ icon, label }: { icon: React.ReactNode; label: string }) {
-    return (
-        <div className="flex flex-col items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card text-[#013b20] shadow-sm">
-                {icon}
-            </div>
-            <span className="text-center font-mono text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                {label}
-            </span>
-        </div>
-    )
-}
 
 function LandingPage() {
 
@@ -38,20 +20,13 @@ function LandingPage() {
             <div className="pointer-events-none fixed inset-0 bg-grid opacity-50" />
 
 
-            <div className={"text-center  my-10 font-mono text-2xl font-bold tracking-[0.18em]"}>
-                Pixadox
-            </div>
+            <section id="top" className="min-h-screen flex flex-col items-center justify-center">
 
-
-            <section id="top" className="relative z-0 mx-auto grid max-w-7xl  items-center gap-4 px-5 pb-20 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:px-12 lg:pb-28">
-
-                <div>
-
-
-                    <h1 className="max-w-3xl text-balance font-mono text-5xl font-bold leading-[1.02] tracking-[-0.06em] sm:text-7xl lg:text-[5.8rem]">
-                        Hide in<br /><span className="text-primary">plain sight.</span>
+                <div className={"mt-auto"}/>
+                    <h1 className="text-balance font-mono text-5xl font-bold leading-[1.02] tracking-[0.6em] sm:text-7xl lg:text-[5.8rem]">
+                        PIXA<span className="text-primary">DOX</span>
                     </h1>
-                    <p className="mt-7 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
+                    <p className="mt-7 text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
                         Pixadox embeds secret text inside PNG images by shifting the smallest possible detail in their pixels, invisible to the human eye.
                     </p>
                     <div className="mt-10 flex flex-col gap-4 sm:flex-row">
@@ -67,48 +42,17 @@ function LandingPage() {
                     <div className="mt-10 flex items-center gap-5 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                         <span className="flex items-center gap-2"><LockKeyhole className="h-3.5 w-3.5 text-primary" /> no uploads</span><span className="h-3 w-px bg-border" /><span className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-primary" /> No Data loss in image</span>
                     </div>
-                </div>
 
-                <div className="relative mx-auto w-full max-w-[500px] lg:ml-auto">
-                    <div className="flex flex-col gap-10 rounded-[2rem] border-2 border-dashed border-[#013b20]/20 p-8 sm:p-10">
-
-                        <div className="relative flex w-full flex-col">
-                            <span className="absolute -left-12 top-1/2 -rotate-90 -translate-y-1/2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#013b20]">
-                                Encode
-                            </span>
-                            <div className="flex w-full items-center justify-between">
-                                <FlowStep icon={<ImageIcon size={20} />} label="Upload a PNG" />
-                                <ArrowRight size={16} className="text-muted-foreground/50" strokeWidth={3} />
-                                <FlowStep icon={<LockKeyhole size={20} />} label="Hide Your Data" />
-                                <ArrowRight size={16} className="text-muted-foreground/50" strokeWidth={3} />
-                                <FlowStep icon={<Download size={20} />} label="Download Encoded Image" />
-                            </div>
-                        </div>
-
-                        <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent"></div>
-
-                        <div className="relative flex w-full flex-col">
-            <span className="absolute -left-12 top-1/2 -rotate-90 -translate-y-1/2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#013b20]">
-                Decode
-            </span>
-                            <div className="flex w-full items-center justify-center gap-12">
-                                <FlowStep icon={<Upload size={20} />} label="Upload a Encoded Image" />
-                                <ArrowRight size={16} className="text-muted-foreground/50" strokeWidth={3} />
-                                <FlowStep icon={<Eye size={20} />} label="Extract Your Data" />
-                            </div>
-                        </div>
-
-                    </div>
+                <div className="mt-6 w-full pl-4 text-center mt-auto">
+                    <a href="#how-it-works" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                        scroll down to see the method <ArrowDown className="h-5 w-5" />
+                    </a>
                 </div>
 
             </section>
 
 
-            <div className="mt-6 w-full pl-4 text-center">
-                <a href="#how-it-works" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                    Or scroll down to see the method <ArrowDown className="h-5 w-5" />
-                </a>
-            </div>
+
 
 
             <section id="how-it-works" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28 min-h-screen">
