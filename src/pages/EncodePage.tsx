@@ -230,22 +230,22 @@ const EncodePage = () => {
 
                 <div className="w-full lg:w-1/2 flex flex-col gap-6">
 
-                    <div className="space-y-2 divide-y py-4 border-black  bg-image-accent/10 shadow-sm font-mono text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="space-y-2 divide-y py-4 border-black  bg-image-accent/10  font-mono text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                         <div className="flex justify-between pb-1 px-6">
                             <p>Dimensions</p>
-                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-500">{originalImage.height}px × {originalImage.width}px</p>
+                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-400">{originalImage.height}px × {originalImage.width}px</p>
                         </div>
                         <div className="flex justify-between pb-1 px-6">
                             <p>Total Pixels</p>
-                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-500">{(originalImage.data.length / 4).toLocaleString()}</p>
+                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-400">{(originalImage.data.length / 4).toLocaleString()}</p>
                         </div>
                         <div className="flex justify-between pb-1 px-6">
                             <p>RGB Channels</p>
-                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-500">{((originalImage.data.length / 4) * 3).toLocaleString()}</p>
+                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-400">{((originalImage.data.length / 4) * 3).toLocaleString()}</p>
                         </div>
                         <div className="flex justify-between pb-1 px-6">
                             <p>Safe Capacity</p>
-                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-500">{bitsToMegabytes(availableBytes * 8)}</p>
+                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-400">{bitsToMegabytes(availableBytes * 8)}</p>
                         </div>
                     </div>
 
@@ -260,8 +260,8 @@ const EncodePage = () => {
                                     }}
                                     className={`flex-1 py-3.5 font-mono text-sm uppercase font-bold transition-colors border-b-2 ${
                                         dataType === type
-                                            ? 'bg-card text-image-accent border-image-accent'
-                                            : 'text-muted border-transparent hover:text-foreground hover:bg-card/50'
+                                            ? 'bg-card text-image-accent-foreground border-image-accent'
+                                            : 'text-muted border-transparent hover:text-image-accent-foreground hover:bg-card/50'
                                     }`}
                                 >
                                     {type}
@@ -339,7 +339,7 @@ const EncodePage = () => {
 
                         <div className="p-6 pt-0 mt-auto">
                             <button
-                                className="w-full bg-image-accent hover:bg-image-accent/90 text-white px-8 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex justify-center items-center gap-2"
+                                className="w-full bg-image-accent/80 hover:bg-image-accent/90 text-image-accent-foreground border border-black px-8 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex justify-center items-center gap-2"
                                 onClick={encodeHandler}
                                 disabled={(dataType !== 'text' && !selectedFile) || (dataType === 'text' && !message) || (isEncrypting && !password)}
                             >

@@ -60,7 +60,7 @@ function LandingPage() {
                     <div>
                         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">The method</p>
                         <h2 className="mt-3 font-mono text-3xl font-bold tracking-[-0.04em] sm:text-4xl">
-                            PIXEL Steganography
+                            Steganography
                         </h2>
                     </div>
                     <p className="max-w-sm leading-7 text-muted-foreground">
