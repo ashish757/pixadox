@@ -7,16 +7,45 @@
 ![img2](img2.png)
 ![img3](img3.png)
 
+
+# How to use
+[https://pixadox.vercel.app](https://pixadox.vercel.app)
+- Open the web application in your browser.
+- If its your first time, you need to encode some data before you try to decode
+
+# Run locally
+- clone the repo
+- `cd pixadox`
+- `npm install`
+- `npm run dev`
+- check on localhost:5173
+
 # Features
 there arent much features it just does one core thing, but it does it well
-### Zero Server Privacy 
+## No-Server Privacy 
 - All the processing is done on the client side, ensuring that your data never leaves your device.
 
-### Steganography
-- Pixadox uses advanced steganography techniques to hide your data within images, making it virtually
+## Steganography Encoding and decoding
+- upload an image and you can encode text, another image , audio and doc file inside of that image
+- then you can download the new image which has this data hidden inside it
+- you can use the decode fature to decode it back
 
-### Nice UI
-- well not a features, but i worked on it a lot so here it goes
+## Password Encryption and tamper proof
+- you can also use a password to let oonly certain people see the hidden message
+- the encryption is  AES-GCM which is a tamper proof algorithm so no one can chagne the encoded message
+
+## Noise Visualization
+- you can see which pixels were edited as its not visible to human eye if you see the output image
+- this can also be used to verify that the encrypted data doesnt have any pattern and is not detectable to the steganography analyzer tools
+- it might still be detected as its not perfect yet (im on it) but it wont be detected taht easily
+- also the encrypted encoding is completely random making it more together to detect
+
+# UI 
+- a display to info --> dimensions, total pixels and colors and total amount of data that the uploaded image can store
+- changed the layouts of the encode page to make it more user friendly and make it look more tool like 
+- an feedback for successful encoding and a progress indicator to show hum much of total capacity ahs been used
+
+
 
 
 # Tech Stack
@@ -26,11 +55,6 @@ there arent much features it just does one core thing, but it does it well
 - Lucide-react
 - Web Crypto API
 
-
-# How to use
-[https://pixadox.vercel.app](https://pixadox.vercel.app)
-- Open the web application in your browser.
-- If its your first time, you need to encode some data before you try to decode
 
 
 # A bit inside
@@ -51,6 +75,11 @@ there arent much features it just does one core thing, but it does it well
 ### Encryption
 - no you can encrypt the message that you store in the image
 - a password is used to generate a cipher of your message then this cipher in encoded in the image
+- in the cipher text the last 16 bytes are special and called authentication tag
+- these are used to verify the integrity of the data that was sotered and also the passoword
+- when user enters a passoword the algorithm assumes that its the correct password and tries to decrpyt while decrypting with use of salt and IV it also rebuld the authentication tag
+- if the generated authentication tag does not match the one stored in the cipher text then it means that either the password is wrong or the data has been tampered with and the decryption will fail
+
 
 ## Decoding
 - Again i read the raw pixel values of the image which is to be decoded
@@ -70,14 +99,12 @@ there arent much features it just does one core thing, but it does it well
 
 
 
-# Run locally
-- clone the repo
-- `cd pixadox`
-- `npm install`
-- `npm run dev`
-- check on localhost:5173
+
 
 ### Used some tailwind UI snippets from flowbite.com
 
 # Future
-- 
+- optimise the pixel manipulation for 4K and 8K images with native c++ code via WASM
+- a web worker for handling the canvas API
+- another WASM module for encryption related task and also increase the loop to create more secure key 
+- a more rich encoding editor where text, images, files could all be endoed together 

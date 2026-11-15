@@ -4,7 +4,7 @@ import { imageDataToUrl, getAccentColor, getDiffImageData } from "../util/loadIm
 import { stringToBinary, bitsToMegabytes, arrayBufferToBinary } from "../util/conversions.ts";
 import { encryptPayload } from "../util/crypto.ts";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Home, Lock, Unlock, Key } from "lucide-react";
+import { ArrowLeft, Home, Lock, Unlock, Key, Loader2, Check } from "lucide-react";
 
 
 type DataType = "text" | "image" | "audio" | "file";
@@ -28,6 +28,8 @@ const EncodePage = () => {
     const [diffImageUrl, setDiffImageUrl] = useState<string | null>(null);
     const [showDiff, setShowDiff] = useState<boolean>(false);
 
+    const [embedStatus, setEmbedStatus] = useState<"idle" | "processing" | "success">("idle");
+
     const originalImageUrl = useMemo(() => imageDataToUrl(originalImage), [originalImage]);
     const modifiedImageUrl = useMemo(() => imageDataToUrl(modifiedImage), [modifiedImage]);
 
@@ -37,6 +39,27 @@ const EncodePage = () => {
         const encryptionOverhead = isEncrypting ? (44 * 8) : 0;
         return Math.floor(((originalImage.data.length * 0.75) - headerBits - encryptionOverhead) / 8);
     }, [originalImage, isEncrypting]);
+
+    const currentPayloadBytes = useMemo(() => {
+        if (dataType === 'text') {
+            return new Blob([message]).size;
+        }
+        return selectedFile ? selectedFile.size : 0;
+    }, [dataType, message, selectedFile]);
+
+    const usagePercentage = useMemo(() => {
+        if (availableBytes === 0) return 0;
+        const percent = Math.floor((currentPayloadBytes / availableBytes) * 100);
+        return Math.min(percent, 100);
+    }, [currentPayloadBytes, availableBytes]);
+
+    const formatBytes = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
 
     useEffect(() => {
         if (!originalImage) {
@@ -83,47 +106,78 @@ const EncodePage = () => {
         if (!originalImage) return;
         setFileError("");
 
-        let finalBinary;
-
-        if (isEncrypting) {
-            if (!password) {
-                setFileError("A password is required for encryption.");
-                return;
-            }
-
-            let buffer: ArrayBuffer;
-            if(dataType === "text") {
-                if(!message) return;
-                buffer = new TextEncoder().encode(message).buffer;
-            } else {
-                if(!selectedFile) return;
-                buffer = await selectedFile.arrayBuffer();
-            }
-
-            const { salt, iv, ciphertext } = await encryptPayload(password, buffer);
-            const combined = new Uint8Array(16 + 12 + ciphertext.length);
-            combined.set(salt, 0);
-            combined.set(iv, 16);
-            combined.set(ciphertext, 28);
-
-            finalBinary = arrayBufferToBinary(combined.buffer);
-        } else {
-            if (dataType === "text") {
-                if (!message) return;
-                finalBinary = stringToBinary(message);
-            } else {
-                if (!selectedFile) return;
-                const buffer = await selectedFile.arrayBuffer();
-                finalBinary = arrayBufferToBinary(buffer);
-            }
+        if (currentPayloadBytes > availableBytes) {
+            setFileError("Payload exceeds available capacity.");
+            return;
         }
 
-        const modified = encodeImage(originalImage, finalBinary, dataType, isEncrypting);
-        setModifiedImage(modified);
+        setEmbedStatus("processing");
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
-        const diffData = getDiffImageData(originalImage, modified);
-        setDiffImageUrl(imageDataToUrl(diffData));
-        setShowDiff(false);
+        try {
+            let finalBinary;
+
+            if (isEncrypting) {
+                if (!password) {
+                    setFileError("A password is required for encryption.");
+                    setEmbedStatus("idle");
+                    return;
+                }
+
+                let buffer: ArrayBuffer;
+                if(dataType === "text") {
+                    if(!message) {
+                        setEmbedStatus("idle");
+                        return;
+                    }
+                    buffer = new TextEncoder().encode(message).buffer;
+                } else {
+                    if(!selectedFile) {
+                        setEmbedStatus("idle");
+                        return;
+                    }
+                    buffer = await selectedFile.arrayBuffer();
+                }
+
+                const { salt, iv, ciphertext } = await encryptPayload(password, buffer);
+                const combined = new Uint8Array(16 + 12 + ciphertext.length);
+                combined.set(salt, 0);
+                combined.set(iv, 16);
+                combined.set(ciphertext, 28);
+
+                finalBinary = arrayBufferToBinary(combined.buffer);
+            } else {
+                if (dataType === "text") {
+                    if (!message) {
+                        setEmbedStatus("idle");
+                        return;
+                    }
+                    finalBinary = stringToBinary(message);
+                } else {
+                    if (!selectedFile) {
+                        setEmbedStatus("idle");
+                        return;
+                    }
+                    const buffer = await selectedFile.arrayBuffer();
+                    finalBinary = arrayBufferToBinary(buffer);
+                }
+            }
+
+            const modified = encodeImage(originalImage, finalBinary, dataType, isEncrypting);
+            setModifiedImage(modified);
+
+            const diffData = getDiffImageData(originalImage, modified);
+            setDiffImageUrl(imageDataToUrl(diffData));
+            setShowDiff(false);
+            setEmbedStatus("success");
+            setTimeout(() => {
+                setEmbedStatus("idle");
+            }, 3000);
+
+        } catch (error) {
+            setFileError("An error occurred during encoding.");
+            setEmbedStatus("idle");
+        }
     }
 
     const handleDownloadAndTest = () => {
@@ -145,7 +199,6 @@ const EncodePage = () => {
 
     return (
         <main className="flex flex-col min-h-screen items-center bg-background pb-8">
-
 
             <div className="w-full flex justify-between items-center px-8 py-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <button
@@ -298,7 +351,22 @@ const EncodePage = () => {
                                 </div>
                             )}
 
-                            <div className="mt-6 p-5 border border-border rounded-xl bg-secondary/30">
+                            <div className="mt-5">
+                                <div className="flex justify-between text-xs font-mono font-bold text-muted-foreground mb-1.5 px-1">
+                                    <span>Payload Usage: {usagePercentage}%</span>
+                                    <span className={currentPayloadBytes > availableBytes ? "text-red-500" : ""}>
+                                        {formatBytes(currentPayloadBytes)} / {formatBytes(availableBytes)}
+                                    </span>
+                                </div>
+                                <div className="h-2 w-full bg-secondary rounded-full overflow-hidden border border-border">
+                                    <div
+                                        className={`h-full transition-all duration-300 ${usagePercentage > 100 ? 'bg-red-500' : 'bg-image-accent'}`}
+                                        style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-5 p-5 border border-border rounded-xl bg-secondary/30">
                                 <label className="flex items-center gap-3 cursor-pointer select-none">
                                     <input
                                         type="checkbox"
@@ -341,9 +409,19 @@ const EncodePage = () => {
                             <button
                                 className="w-full bg-image-accent/80 hover:bg-image-accent/90 text-image-accent-foreground border border-black px-8 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex justify-center items-center gap-2"
                                 onClick={encodeHandler}
-                                disabled={(dataType !== 'text' && !selectedFile) || (dataType === 'text' && !message) || (isEncrypting && !password)}
+                                disabled={
+                                    (dataType !== 'text' && !selectedFile) ||
+                                    (dataType === 'text' && !message) ||
+                                    (isEncrypting && !password) ||
+                                    (currentPayloadBytes > availableBytes) ||
+                                    embedStatus === "processing"
+                                }
                             >
-                                {isEncrypting ? (
+                                {embedStatus === "processing" ? (
+                                    <><Loader2 size={18} className="animate-spin" /> Processing Data</>
+                                ) : embedStatus === "success" ? (
+                                    <><Check size={18} /> Successfully Embedded</>
+                                ) : isEncrypting ? (
                                     <><Lock size={18} /> Encrypt & Embed {dataType}</>
                                 ) : (
                                     <><Unlock size={18} /> Embed {dataType}</>
@@ -351,7 +429,6 @@ const EncodePage = () => {
                             </button>
                         </div>
                     </div>
-
 
                 </div>
 
