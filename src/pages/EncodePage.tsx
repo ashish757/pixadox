@@ -44,12 +44,19 @@ const EncodePage = () => {
         if (originalImage) {
             const { r, g, b } = getAccentColor(originalImage);
             document.documentElement.style.setProperty('--image-accent', `${r} ${g} ${b}`);
+
+            const luminance  = 0.299 * r + 0.587 * g + 0.114 * b;
+            const foregroundRGB = luminance > 128 ? '0 0 0' : '255 255 255';
+            document.documentElement.style.setProperty('--image-accent-foreground', foregroundRGB);
+
         } else {
             document.documentElement.style.setProperty('--image-accent', '34 197 94');
+            document.documentElement.style.setProperty('--image-accent-foreground', '255 255 255');
         }
 
         return () => {
             document.documentElement.style.setProperty('--image-accent', '34 197 94');
+            document.documentElement.style.setProperty('--image-accent-foreground', '255 255 255');
         };
     }, [originalImage]);
 
@@ -131,7 +138,7 @@ const EncodePage = () => {
     return (
         <main className="flex flex-col min-h-screen items-center bg-background pb-12">
 
-            {/* Navigation */}
+
             <div className="w-full flex justify-between items-center px-8 py-6 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <button
                     onClick={() => navigate("/upload-encode")}
@@ -155,11 +162,10 @@ const EncodePage = () => {
                 </div>
             </div>
 
-            {/* Image Comparison Section */}
             <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 px-8 py-8">
                 <div className="w-full lg:w-1/2">
                     <div className="border border-image-accent/60 bg-card rounded-2xl overflow-hidden shadow-sm flex flex-col h-full">
-                        <h2 className="bg-image-accent/50 text-image-accent border-b border-image-accent/50 font-bold text-lg px-5 py-3 flex items-center gap-2">
+                        <h2 className="bg-image-accent/50 text-image-accent-foreground border-b border-image-accent/50 font-bold text-lg px-5 py-3 flex items-center gap-2">
                             Original Image
                         </h2>
                         <div className="flex-1 flex justify-center items-center p-4 bg-black/5">
@@ -170,7 +176,7 @@ const EncodePage = () => {
 
                 <div className="w-full lg:w-1/2">
                     <div className="border border-image-accent/60 bg-card rounded-2xl overflow-hidden shadow-sm flex flex-col h-full relative">
-                        <h2 className="bg-image-accent/50 text-image-accent border-b border-image-accent/50 font-bold text-lg px-5 py-3 flex items-center gap-2">
+                        <h2 className="bg-image-accent/50 text-image-accent-foreground border-b border-image-accent/50 font-bold text-lg px-5 py-3 flex items-center gap-2">
                             Encoded Image
                         </h2>
                         <div className="flex-1 flex justify-center items-center p-4 bg-black/5 min-h-[300px]">
@@ -201,31 +207,28 @@ const EncodePage = () => {
                 </div>
             </div>
 
-            {/* Controls Section */}
             <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 px-8">
-                {/* Stats Panel */}
                 <div className="w-full lg:w-1/2">
                     <div className="grid grid-cols-2 gap-4 border border-image-accent/50 rounded-2xl p-6 bg-image-accent/20 shadow-sm h-full content-start">
                         <div>
                             <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dimensions</p>
-                            <p className="font-mono text-xl font-medium text-foreground">{originalImage.height}px × {originalImage.width}px</p>
+                            <p className="font-mono text-xl font-medium text-image-accent-foreground">{originalImage.height}px × {originalImage.width}px</p>
                         </div>
                         <div>
                             <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Pixels</p>
-                            <p className="font-mono text-xl font-medium text-foreground">{(originalImage.data.length / 4).toLocaleString()}</p>
+                            <p className="font-mono text-xl font-medium text-image-accent-foreground">{(originalImage.data.length / 4).toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">RGB Channels</p>
-                            <p className="font-mono text-xl font-medium text-foreground">{((originalImage.data.length / 4) * 3).toLocaleString()}</p>
+                            <p className="font-mono text-xl font-medium text-image-accent-foreground">{((originalImage.data.length / 4) * 3).toLocaleString()}</p>
                         </div>
                         <div>
-                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-image-accent">Safe Capacity</p>
-                            <p className="font-mono text-xl font-bold text-image-accent">{bitsToMegabytes(availableBytes * 8)}</p>
+                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">Safe Capacity</p>
+                            <p className="font-mono text-xl font-bold text-image-accent-foreground">{bitsToMegabytes(availableBytes * 8)}</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Encoding Panel */}
                 <div className="w-full lg:w-1/2">
                     <div className="flex flex-col border border-border rounded-2xl overflow-hidden bg-card shadow-sm">
                         <div className="flex bg-secondary">
@@ -276,7 +279,6 @@ const EncodePage = () => {
                                 </div>
                             )}
 
-                            {/* Security Section */}
                             <div className="mt-6 p-5 border border-border rounded-xl bg-secondary/30">
                                 <label className="flex items-center gap-3 cursor-pointer select-none">
                                     <input

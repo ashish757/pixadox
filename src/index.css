@@ -19,6 +19,7 @@
     --font-mono: "IBM Plex Mono", 'monospace';
 
     --color-image-accent: rgb(var(--image-accent));
+    --color-image-accent-foreground: rgb(var(--image-accent-foreground));
 }
 
 :root {
@@ -39,6 +40,7 @@
     --ring: oklch(0.52 0.08 155);
 
     --image-accent: 34 197 94;
+    --image-accent-foreground: 255 255 255;
 }
 
 * { @apply border-border outline-ring/50; }
