@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { encodeImage } from "../util/encodeImage.ts";
-import { imageDataToUrl, getAccentColor } from "../util/loadImage.ts";
+import { imageDataToUrl, getAccentColor, getDiffImageData } from "../util/loadImage.ts";
 import { stringToBinary, bitsToMegabytes, arrayBufferToBinary } from "../util/conversions.ts";
 import { encryptPayload } from "../util/crypto.ts";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Home, Lock, Unlock, Key, Download } from "lucide-react";
+import { ArrowLeft, Home, Lock, Unlock, Key } from "lucide-react";
+
 
 type DataType = "text" | "image" | "audio" | "file";
 
@@ -23,6 +24,9 @@ const EncodePage = () => {
 
     const [isEncrypting, setIsEncrypting] = useState<boolean>(false);
     const [password, setPassword] = useState("");
+
+    const [diffImageUrl, setDiffImageUrl] = useState<string | null>(null);
+    const [showDiff, setShowDiff] = useState<boolean>(false);
 
     const originalImageUrl = useMemo(() => imageDataToUrl(originalImage), [originalImage]);
     const modifiedImageUrl = useMemo(() => imageDataToUrl(modifiedImage), [modifiedImage]);
@@ -116,6 +120,10 @@ const EncodePage = () => {
 
         const modified = encodeImage(originalImage, finalBinary, dataType, isEncrypting);
         setModifiedImage(modified);
+
+        const diffData = getDiffImageData(originalImage, modified);
+        setDiffImageUrl(imageDataToUrl(diffData));
+        setShowDiff(false);
     }
 
     const handleDownloadAndTest = () => {
@@ -136,10 +144,10 @@ const EncodePage = () => {
     if (!originalImage || originalImageUrl === null) return null;
 
     return (
-        <main className="flex flex-col min-h-screen items-center bg-background pb-12">
+        <main className="flex flex-col min-h-screen items-center bg-background pb-8">
 
 
-            <div className="w-full flex justify-between items-center px-8 py-6 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+            <div className="w-full flex justify-between items-center px-8 py-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <button
                     onClick={() => navigate("/upload-encode")}
                     className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-mono text-sm uppercase tracking-wider transition-colors"
@@ -162,26 +170,48 @@ const EncodePage = () => {
                 </div>
             </div>
 
-            <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 px-8 py-8">
-                <div className="w-full lg:w-1/2">
-                    <div className="border border-image-accent/60 bg-card rounded-2xl overflow-hidden shadow-sm flex flex-col h-full">
-                        <h2 className="bg-image-accent/50 text-image-accent-foreground border-b border-image-accent/50 font-bold text-lg px-5 py-3 flex items-center gap-2">
+            <div className="w-full flex flex-col lg:flex-row gap-6 px-8 py-8">
+
+                <div className="w-full lg:w-1/2 flex flex-col gap-6">
+
+                    <div className="border border-image-accent/60 bg-card rounded-2xl overflow-hidden shadow-sm flex flex-col">
+                        <div className="bg-image-accent/50 text-image-accent-foreground border-b border-image-accent/50 font-bold text-lg px-5 py-2 flex items-center gap-2">
                             Original Image
-                        </h2>
-                        <div className="flex-1 flex justify-center items-center p-4 bg-black/5">
-                            <img className="max-h-[400px] object-contain rounded-lg shadow-sm" src={originalImageUrl} alt="Original" />
+                        </div>
+                        <div className="flex-1 flex justify-center items-center p-2 bg-black/5">
+                            <img className="max-h-75 object-contain rounded-lg shadow-sm" src={originalImageUrl} alt="Original" />
                         </div>
                     </div>
-                </div>
 
-                <div className="w-full lg:w-1/2">
-                    <div className="border border-image-accent/60 bg-card rounded-2xl overflow-hidden shadow-sm flex flex-col h-full relative">
-                        <h2 className="bg-image-accent/50 text-image-accent-foreground border-b border-image-accent/50 font-bold text-lg px-5 py-3 flex items-center gap-2">
-                            Encoded Image
-                        </h2>
-                        <div className="flex-1 flex justify-center items-center p-4 bg-black/5 min-h-[300px]">
+                    <div className="border border-image-accent/60 bg-card rounded-2xl overflow-hidden shadow-sm flex flex-col">
+                        <div className="bg-image-accent/50 text-image-accent-foreground border-b border-image-accent/50  px-5 py-2 flex items-center justify-between">
+                            <span className=" font-bold text-lg">Encoded Image</span>
+                            {modifiedImageUrl && (
+                                <div className=" flex gap-1">
+                                    {diffImageUrl && (
+                                        <button
+                                            onClick={() => setShowDiff(!showDiff)}
+                                            className="text-sm backdrop-blur-sm px-4 py-1.5 rounded-xl cursor-pointer text-image-accent-foreground  bg-image-accent  transition-all"
+                                        >
+                                            {showDiff ? "View Image" : "View Noise"}
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={handleDownloadAndTest}
+                                        className="text-sm backdrop-blur-sm px-4 py-1.5 rounded-xl cursor-pointer text-image-accent-foreground bg-image-accent  transition-all"
+                                    >
+                                        Download
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex-1 flex justify-center items-center p-2 bg-black/5 min-h-75">
                             {modifiedImageUrl ? (
-                                <img className="max-h-[400px] object-contain rounded-lg shadow-sm" src={modifiedImageUrl} alt="Encoded" />
+                                <img
+                                    className="max-h-75 object-contain rounded-lg shadow-sm pixel-art"
+                                    src={(showDiff ? diffImageUrl : modifiedImageUrl) || undefined}
+                                    alt={showDiff ? "Forensic Noise Map" : "Encoded Image"}
+                                />
                             ) : (
                                 <div className="text-center px-8">
                                     <div className="w-16 h-16 mx-auto bg-image-accent/50 rounded-full flex items-center justify-center mb-4">
@@ -193,45 +223,34 @@ const EncodePage = () => {
                                 </div>
                             )}
                         </div>
-                        {modifiedImageUrl && (
-                            <div className="absolute bottom-4 right-4">
-                                <button
-                                    onClick={handleDownloadAndTest}
-                                    className="flex items-center gap-2 border border-image-accent/50 bg-card/90 backdrop-blur-sm px-6 py-2.5 rounded-full cursor-pointer text-image-accent font-bold hover:bg-image-accent hover:text-white transition-all shadow-md"
-                                >
-                                    <Download size={18} /> Download & Try Decoding
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
 
-            <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 px-8">
-                <div className="w-full lg:w-1/2">
-                    <div className="grid grid-cols-2 gap-4 border border-image-accent/50 rounded-2xl p-6 bg-image-accent/20 shadow-sm h-full content-start">
-                        <div>
-                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dimensions</p>
-                            <p className="font-mono text-xl font-medium text-image-accent-foreground">{originalImage.height}px × {originalImage.width}px</p>
-                        </div>
-                        <div>
-                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Pixels</p>
-                            <p className="font-mono text-xl font-medium text-image-accent-foreground">{(originalImage.data.length / 4).toLocaleString()}</p>
-                        </div>
-                        <div>
-                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">RGB Channels</p>
-                            <p className="font-mono text-xl font-medium text-image-accent-foreground">{((originalImage.data.length / 4) * 3).toLocaleString()}</p>
-                        </div>
-                        <div>
-                            <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">Safe Capacity</p>
-                            <p className="font-mono text-xl font-bold text-image-accent-foreground">{bitsToMegabytes(availableBytes * 8)}</p>
-                        </div>
                     </div>
+
                 </div>
 
-                <div className="w-full lg:w-1/2">
+                <div className="w-full lg:w-1/2 flex flex-col gap-6">
+
+                    <div className="space-y-2 divide-y py-4 border-black  bg-image-accent/10 shadow-sm font-mono text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        <div className="flex justify-between pb-1 px-6">
+                            <p>Dimensions</p>
+                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-500">{originalImage.height}px × {originalImage.width}px</p>
+                        </div>
+                        <div className="flex justify-between pb-1 px-6">
+                            <p>Total Pixels</p>
+                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-500">{(originalImage.data.length / 4).toLocaleString()}</p>
+                        </div>
+                        <div className="flex justify-between pb-1 px-6">
+                            <p>RGB Channels</p>
+                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-500">{((originalImage.data.length / 4) * 3).toLocaleString()}</p>
+                        </div>
+                        <div className="flex justify-between pb-1 px-6">
+                            <p>Safe Capacity</p>
+                            <p className="text-image-accent-foreground text-shadow-md text-shadow-gray-500">{bitsToMegabytes(availableBytes * 8)}</p>
+                        </div>
+                    </div>
+
                     <div className="flex flex-col border border-border rounded-2xl overflow-hidden bg-card shadow-sm">
-                        <div className="flex bg-secondary">
+                        <div className="flex bg-image-accent/70 text-image-accent-foreground">
                             {(['text', 'image', 'audio', 'file'] as DataType[]).map((type) => (
                                 <button
                                     key={type}
@@ -242,7 +261,7 @@ const EncodePage = () => {
                                     className={`flex-1 py-3.5 font-mono text-sm uppercase font-bold transition-colors border-b-2 ${
                                         dataType === type
                                             ? 'bg-card text-image-accent border-image-accent'
-                                            : 'text-muted-foreground border-transparent hover:text-foreground hover:bg-card/50'
+                                            : 'text-muted border-transparent hover:text-foreground hover:bg-card/50'
                                     }`}
                                 >
                                     {type}
@@ -253,14 +272,14 @@ const EncodePage = () => {
                         <div className="p-6">
                             {dataType === 'text' ? (
                                 <textarea
-                                    className="w-full border border-border p-4 rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-image-accent/50 resize-none"
+                                    className="w-full border border-border p-4 rounded-xl bg-image-accent/20 focus:outline-none focus:ring-2 focus:ring-image-accent/50 resize-none"
                                     rows={5}
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                     placeholder="Enter your secret message here..."
                                 />
                             ) : (
-                                <div className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-border rounded-xl bg-background hover:bg-secondary/50 hover:border-image-accent/50 transition-colors relative group">
+                                <div className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-border rounded-xl bg-image-accent/20 hover:bg-image-accent/10 hover:border-image-accent/50 transition-colors relative group">
                                     <input
                                         type="file"
                                         accept={
@@ -271,7 +290,7 @@ const EncodePage = () => {
                                         onChange={handleFileChange}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                     />
-                                    <div className="text-muted-foreground group-hover:text-image-accent transition-colors mb-2">
+                                    <div className="text-muted group-hover:text-image-accent transition-colors mb-2">
                                         <Lock size={32} />
                                     </div>
                                     <p className="text-foreground font-bold">Click or drag {dataType} to upload</p>
@@ -332,8 +351,12 @@ const EncodePage = () => {
                             </button>
                         </div>
                     </div>
+
+
                 </div>
+
             </div>
+
         </main>
     )
 }
