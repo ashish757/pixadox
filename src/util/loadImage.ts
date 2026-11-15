@@ -64,3 +64,29 @@ export const getAccentColor = (imageData: ImageData) => {
     };
 
 }
+
+export const getDiffImageData = (originalImage: ImageData, encodedImage: ImageData) => {
+    const length = originalImage.data.length;
+    const diffPixels = new Uint8ClampedArray(length);
+
+    for (let i = 0; i < length; i += 4) {
+        if (
+            originalImage.data[i] !== encodedImage.data[i] ||
+            originalImage.data[i + 1] !== encodedImage.data[i + 1] ||
+            originalImage.data[i + 2] !== encodedImage.data[i + 2]
+        ) {
+            diffPixels[i] = 34;
+            diffPixels[i + 1] = 197;
+            diffPixels[i + 2] = 94;
+            diffPixels[i + 3] = 255;
+        } else {
+
+            diffPixels[i] = 0;
+            diffPixels[i+1] = 0;
+            diffPixels[i+2] = 0;
+            diffPixels[i+3] = 255;
+        }
+    }
+
+    return new ImageData(diffPixels, originalImage.width, originalImage.height);
+}
